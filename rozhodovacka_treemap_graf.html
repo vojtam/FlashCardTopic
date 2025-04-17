@@ -9,6 +9,7 @@
       href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator.min.css"
       rel="stylesheet"
     />
+    <link href="/dist/css/tabulator_modern.min.css" rel="stylesheet">
     <script
       type="text/javascript"
       src="https://unpkg.com/tabulator-tables@6.3.1/dist/js/tabulator.min.js"
@@ -95,6 +96,11 @@
       .search-item:hover {
         background-color: #f0f0f0; /* Subtle hover */
       }
+
+      #results-table {
+        width: 80vw;
+        margin-top: 1rem;
+      }
     </style>
   </head>
   <body>
@@ -154,7 +160,7 @@
           feature: {
             mark: { show: true },
             dataView: { show: true, readOnly: false },
-            
+
             saveAsImage: { show: true },
           },
         },
@@ -265,7 +271,6 @@
       const results = document.getElementById("results");
       let blurTimeoutId = null;
 
-      // --- Search Function ---
       function findNodeByName(nodes, searchTerm) {
         let found = [];
         if (!nodes || nodes.length === 0 || !searchTerm) {
@@ -297,9 +302,9 @@
             )}">${node.name}</a>`;
             results.appendChild(li);
           });
-          results.style.display = "block"; // Show the list
+          results.style.display = "block";
         } else {
-          results.style.display = "none"; // Hide the list if no results
+          results.style.display = "none"; 
         }
       };
 
@@ -311,7 +316,6 @@
             type: "treemapZoomToNode",
             targetNodeId: node.name,
           });
-          // Optionally clear search and hide list after zoom
           searchInput.value = "";
           results.style.display = "none";
           searchFeedback.textContent = "";
@@ -344,17 +348,16 @@
         }
         const searchTerm = searchInput.value.trim().toLowerCase();
         if (searchTerm.length > 1) {
-          showList(searchTerm); // Re-show list based on current content
+          showList(searchTerm); 
         }
       });
 
       searchInput.addEventListener("blur", () => {
-        // Hide the list *after a short delay*
-        // This allows clicks on the results list to register first
+
         blurTimeoutId = setTimeout(() => {
           results.style.display = "none";
           blurTimeoutId = null;
-        }, 150); // Adjust delay ms if needed (100-200ms is usually good)
+        }, 150); 
       });
 
       // Delegated click listener on the results UL
@@ -374,16 +377,16 @@
           );
 
           if (clickedNode) {
-            performZoom(clickedNode); // Use the zoom function
-            searchInput.value = nodeName; // Optional: Update input field
-            results.style.display = "none"; // Hide list immediately after click
+            performZoom(clickedNode); 
+            searchInput.value = nodeName; 
+            results.style.display = "none"; 
           } else {
             console.warn(
               "Clicked node name not found precisely in data:",
               nodeName
             );
             searchFeedback.textContent = "Could not navigate to selected item.";
-            results.style.display = "none"; // Hide list anyway
+            results.style.display = "none"; 
           }
         }
       });
@@ -408,14 +411,11 @@
       fetch(githubRawUrl)
         .then((response) => {
           if (!response.ok) {
-            // Throw an error if the response status is not OK (e.g., 404 Not Found)
             throw new Error(`HTTP error! status: ${response.status}`);
           }
-          // Parse the response body as JSON
           return response.json();
         })
         .then((jsonData) => {
-          // Hide loading indicator
 
           console.log("Data loaded successfully:", jsonData);
 
@@ -423,11 +423,9 @@
           dataFull = jsonData;
           treemapData = jsonData;
           console.log(treemapData);
-          //   setupSearchListener();
           myChart.setOption(option);
         })
         .catch((error) => {
-          // Display error message
           document.getElementById(
             "treemap"
           ).innerHTML = `<div style="color: red; text-align: center; padding: 20px;">
@@ -444,127 +442,64 @@
         myChart.resize();
       });
 
-      var tabledata = [
-        {
-          id: 1,
-          name: "Oli Bob",
-          progress: 12,
-          gender: "male",
-          rating: 1,
-          col: "red",
-          dob: "19/02/1984",
-          car: 1,
-        },
-        {
-          id: 2,
-          name: "Mary May",
-          progress: 1,
-          gender: "female",
-          rating: 2,
-          col: "blue",
-          dob: "14/05/1982",
-          car: true,
-        },
-        {
-          id: 3,
-          name: "Christine Lobowski",
-          progress: 42,
-          gender: "female",
-          rating: 0,
-          col: "green",
-          dob: "22/05/1982",
-          car: "true",
-        },
-        {
-          id: 4,
-          name: "Brendon Philips",
-          progress: 100,
-          gender: "male",
-          rating: 1,
-          col: "orange",
-          dob: "01/08/1980",
-        },
-        {
-          id: 5,
-          name: "Margret Marmajuke",
-          progress: 16,
-          gender: "female",
-          rating: 5,
-          col: "yellow",
-          dob: "31/01/1999",
-        },
-        {
-          id: 6,
-          name: "Frank Harbours",
-          progress: 38,
-          gender: "male",
-          rating: 4,
-          col: "red",
-          dob: "12/05/1966",
-          car: 1,
-        },
-      ];
+      const tableDataUrl =
+        "https://raw.githubusercontent.com/vojtam/FlashCardTopic/refs/heads/main/docs_topics_data.json";
 
-      var table = new Tabulator("#results-table", {
-        data: tabledata, //load row data from array
-        layout: "fitColumns", //fit columns to width of table
-        responsiveLayout: "hide", //hide columns that don't fit on the table
-        addRowPos: "top", //when adding a new row, add it to the top of the table
-        history: true, //allow undo and redo actions on the table
-        pagination: "local", //paginate the data
-        paginationSize: 7, //allow 7 rows per page of data
-        paginationCounter: "rows", //display count of paginated rows in footer
-        movableColumns: true, //allow column order to be changed
-        initialSort: [
-          //set the initial sort order of the data
-          { column: "name", dir: "asc" },
-        ],
-        columnDefaults: {
-          tooltip: true, //show tool tips on cells
-        },
-        columns: [
-          //define the table columns
-          { title: "Name", field: "name", editor: "input" },
-          {
-            title: "Task Progress",
-            field: "progress",
-            hozAlign: "left",
-            formatter: "progress",
-            editor: true,
-          },
-          {
-            title: "Gender",
-            field: "gender",
-            width: 95,
-            editor: "list",
-            editorParams: { values: ["male", "female"] },
-          },
-          {
-            title: "Rating",
-            field: "rating",
-            formatter: "star",
-            hozAlign: "center",
-            width: 100,
-            editor: true,
-          },
-          { title: "Color", field: "col", width: 130, editor: "input" },
-          {
-            title: "Date Of Birth",
-            field: "dob",
-            width: 130,
-            sorter: "date",
-            hozAlign: "center",
-          },
-          {
-            title: "Driver",
-            field: "car",
-            width: 90,
-            hozAlign: "center",
-            formatter: "tickCross",
-            sorter: "boolean",
-            editor: true,
-          },
-        ],
+      async function getData(url) {
+        try {
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+          }
+
+          const json = await response.json();
+          return json;
+        } catch (error) {
+          console.error(error.message);
+        }
+      }
+      const tableData = getData(tableDataUrl).then((result) => {
+        return result;
+      });
+      console.log(tableData);
+
+      let table;
+      getData(tableDataUrl).then((actualTableData) => {
+        if (actualTableData) {
+          console.log("Initializing Tabulator with data:", actualTableData);
+
+          table = new Tabulator("#results-table", {
+            data: actualTableData,
+            layout:"fitColumns",
+            responsiveLayout: "hide",
+            addRowPos: "top",
+            history: true,
+            pagination: "local",
+            paginationSize: 10,
+            paginationCounter: "rows",
+            movableColumns: true,
+            initialSort: [
+              { column: "name", dir: "asc" }, 
+            ],
+            columnDefaults: {
+              tooltip: true,
+            },
+            groupBy: ["rs_name", "Name"],
+            columns: [
+
+              { title: "Question", field: "question"}, 
+              { title: "Correct", field: "correct"}, 
+              { title: "Distractor", field: "distractor"}, 
+              { title: "Resource Set", field: "rs_name"},
+              { title: "Topic Name", field: "Name"},
+            ],
+            placeholder: "Loading data or no data available...",
+          });
+        } else {
+          console.error("Tabulator initialization skipped: No data received.");
+          document.getElementById("results-table").textContent =
+            "Failed to load table data.";
+        }
       });
     </script>
   </body>
