@@ -109,10 +109,10 @@
         width: 100%;
         text-align: center;
         font-family: monospace;
-        font-size: 2rem;
+        font-size: 2.5rem;
       "
     >
-      Rozhodovačka TreeMap graf
+      Shlukování rozhodovaček - results
     </h1>
     <main id="treemap-container">
       <div id="searchContainer">
@@ -125,6 +125,7 @@
 
     <section>
       <div id="results-table"></div>
+      
     </section>
 
     <script type="text/javascript">
@@ -360,7 +361,6 @@
         }, 150); 
       });
 
-      // Delegated click listener on the results UL
       results.addEventListener("click", (event) => {
         const targetLink = event.target.closest("a.search-item");
         if (targetLink && targetLink.dataset.nodeName) {
@@ -370,7 +370,7 @@
           }
 
           const nodeName = decodeURIComponent(targetLink.dataset.nodeName);
-          searchFeedback.textContent = ""; // Clear feedback
+          searchFeedback.textContent = ""; 
 
           const clickedNode = findNodeByName(treemapData, nodeName).find(
             (n) => n.name === nodeName
@@ -379,6 +379,7 @@
           if (clickedNode) {
             performZoom(clickedNode); 
             searchInput.value = nodeName; 
+            // searchInput.value = ""
             results.style.display = "none"; 
           } else {
             console.warn(
