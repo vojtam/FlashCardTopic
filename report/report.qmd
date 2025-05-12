@@ -1,0 +1,283 @@
+---
+title: "Question Bank Interpretable Clustering"
+author: "Vojtěch Máčala"
+execute: 
+  cache: false
+format:
+  html:
+    include-in-header: 
+      text: |
+        <style>
+        .v-center-container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 90%;
+        }
+        .full-screen-width-container {
+          width: 100vw; /* Viewport width */
+          position: relative; /* Needed for left positioning */
+          left: 50%;
+          right: 50%;
+          margin-left: -50vw; /* Center it */
+          margin-right: -50vw;
+          max-width: 100vw; /* Ensure it doesn't exceed viewport */
+          box-sizing: border-box; /* Include padding/border in width */
+        }
+        /* Style the iframe within the full-width container */
+        .full-screen-width-container iframe {
+          display: block; /* Remove potential extra space below */
+          width: 100%;   /* Fill the container */
+          border: none;  /* Remove default border */
+          /* Consider adding a max-height or aspect-ratio if needed */
+          height: 90vh; /* Example: Set a viewport height */
+        }
+        /* Style for the itables container if needed */
+        .full-screen-width-container .itables {
+           margin-left: auto; /* Center table within the full width */
+           margin-right: auto;
+           /* Optionally add padding if it feels too close to screen edges */
+           /* padding-left: 15px; */
+           /* padding-right: 15px; */
+        }
+        </style>
+
+    toc: true
+    theme: Brite
+    code-fold: true
+    lightbox: true
+    embed-resources: true
+    monofont: 'Source Code Pro'
+    fontsize: 20px
+    self-contained: true
+    center-title-slide: true
+    code-tools: true
+    code-block-bg: true
+    code-copy: hover
+    code-link: true
+    code-block-border-left: "#31BAE9"
+---
+
+```{python}
+import polars as pl
+import plotly.express as px
+import plotly
+from itables import init_notebook_mode, show, options
+```
+
+![Příklad rozhodovačky](./figures/question.png)
+
+
+## 1) Cíl
+```{=html}
+<div class="card bg-primary mb-3" style="max-width: 50rem;">
+  <div class="card-header">Cíle</div>
+  <div class="card-body">
+    <h4 class="card-title"> => Prozkoumat rozhodovačky v různých resource setech (RS)</h4>
+
+    <h4 class="card-title"> => Vytvořit shluky otázek, které pomohou s:</h4>
+    <ul>
+      <li class="card-text">získáním přehledu o tématech v RS</li>
+      <li class="card-text">rozhodováním, která témata jsou málo zastoupená</li>
+<li class="card-text">které otázky jsou špatně zařazené</li>
+<li class="card-text">zda je potřeba okruhy rozdělit</li>
+    </ul>
+  </div>
+</div>
+```
+
+```{python}
+def safe_show_itable(filepath):
+    try:
+        if filepath.exists() and filepath.stat().st_size > 0:
+            df = pl.read_csv(filepath)
+            # Capture HTML representation for potential wrapping
+            itable_html = show(df, classes="display compact")
+            return itable_html
+        else:
+            print(f"<p><em>Data file not found or empty: {filepath.name}</em></p>")
+            return ""
+    except Exception as e:
+        print(f"<p><em>Error loading data {filepath.name}: {e}</em></p>")
+        return ""
+```
+
+
+## 2) Postup
+
+![Schema Bertopic pipeliny](./figures/modularity.svg)
+
+```{python}
+from pathlib import Path
+
+results_dir = Path("./results/")
+names = list(set(file.stem.split(".")[0] for file in results_dir.iterdir()))
+```
+
+## 3) Výsledky
+<br/>
+
+### Kde to funguje
+::: {.panel-tabset .column-page}
+
+```{python}
+#| output: asis
+for name in names:
+  print(f"## {name}") 
+  plotly.io.read_json(f"results/{name}.json").show()
+  treemap_path = results_dir / f"{name}.treemap.html"
+  if treemap_path.exists():
+      print(f"""
+<div class="full-screen-width-container">
+<iframe loading="lazy" src="{treemap_path}" title="Treemap for {name}"></iframe>
+</div>
+      """)
+
+  else:
+      print(f"<p><em>Treemap HTML not found: {treemap_path.name}</em></p>")
+  plotly.io.read_json(f"results/{name}.barchart.json").show()
+  plotly.io.read_json(f"results/{name}.hierarchy.json").show()
+  csv_path = results_dir / f"{name}.csv"
+  table_html = safe_show_itable(csv_path)
+  if table_html:
+        print(f"""
+  <div class="full-screen-width-container">
+      {table_html}
+  </div>
+        """)
+```
+
+<br/>
+:::
+
+```{python}
+from pathlib import Path
+
+out_results_dir = Path("./outliers_results/")
+out_results_names = list(set(file.stem.split(".")[0] for file in out_results_dir.iterdir()))
+```
+
+
+### Outliers
+::: {.panel-tabset .column-page}
+
+```{python}
+#| output: asis
+for name in out_results_names:
+  print(f"## {name}") 
+  plotly.io.read_json(f"outliers_results/{name}.json").show()
+```
+
+<br/>
+:::
+
+
+```{python}
+from pathlib import Path
+
+bad_results_dir = Path("./bad_results/")
+bad_results_names = list(set(file.stem.split(".")[0] for file in bad_results_dir.iterdir()))
+```
+### Kde to nefunguje
+::: {.panel-tabset .column-page}
+
+
+```{python}
+#| output: asis 
+for name in bad_results_names:
+  print(f"## {name}") 
+  plotly.io.read_json(f"bad_results/{name}.json").show()
+  treemap_path = bad_results_dir / f"{name}.treemap.html"
+  if treemap_path.exists():
+      # Wrap the iframe in the div with the full-screen class
+      print(f"""
+<div class="full-screen-width-container">
+<iframe loading="lazy" src="{treemap_path}" title="Treemap for {name}"></iframe>
+</div>
+      """)
+
+  else:
+      print(f"<p><em>Treemap HTML not found: {treemap_path.name}</em></p>")
+  plotly.io.read_json(f"bad_results/{name}.barchart.json").show()
+  plotly.io.read_json(f"bad_results/{name}.hierarchy.json").show()
+  csv_path =  Path(f"bad_results/{name}.csv")
+  table_html = safe_show_itable(csv_path)
+  if table_html:
+        # Wrap the captured HTML table in the full-screen container
+        print(f"""
+  <div class="full-screen-width-container">
+      {table_html}
+  </div>
+        """)
+```
+
+<br/>
+:::
+
+
+## Výhody postupu
+- spousta hyperparametrů, které se dají optimalizovat pro konkrétní data
+- modularita - stačí definovat jednotlivé komponenty
+- shluky jsou interpretovatelné
+- výsledné reprezentace lze vylepšit pomocí jazykovych modelů
+- lze použít v semi-supervised nastavení | *Guided Topic Modelling*
+- *Online Topic Modelling*
+
+## Limitace postupu
+- spousta hyperparametrů
+- hodně závisí na kvalitě embeddingů (čeština pokulhává)
+- moc nefunguje pro příliš krátké texty
+- ideální pro větší množství dokumentů 
+- defaultně hodně outlierů
+
+::: {.column-screen}
+```{=html}
+<section style="height:100vh">
+  <iframe frameborder="0" style="overflow:hidden;height:100%;width:100%" height="100%" width="100%" src="../rozhodovacka_treemap_graf.html"></iframe>
+
+</section>
+
+```
+:::
+
+#### Možná doporučení
+
+
+
+
+
+
+```{=html}
+<div class="card bg-secondary mb-3" style="max-width: 50rem;">
+  <div class="card-header">Wifi - bezdrátové sítě</div>
+  <div class="card-body">
+      <h6 class="card-text">
+         V <i>sítě protokoly</i> je skupina otáze na wifi / bezdrátové sítě. V <i>sítě obecné</i> je taky několik otázek na wifi = může dávat smysl vytvořit nové resource set a přemístit do něj otázky z těchto dvou.
+      </h6>
+  </div>
+</div>
+```
+
+
+```{=html}
+<div class="card bg-secondary mb-3" style="max-width: 50rem;">
+  <div class="card-header">Procesor - hardware</div>
+  <div class="card-body">
+      <h6 class="card-text">
+          V <i>Procesor architektura</i> je relativně malá skupina otázek na von Neumannovu architekturu - obecnější téma než architektura procesoru, dávalo by smysl přesunout tyto otázky do <i>Hardware zaklady </i>
+      </h6>
+  </div>
+</div>
+```
+
+
+```{=html}
+<div class="card bg-secondary mb-3" style="max-width: 50rem;">
+  <div class="card-header">Prohledávání stavového prostoru - optimalizace</div>
+  <div class="card-body">
+      <h6 class="card-text">
+          V <i>Optimalizace</i> je skupina otázek ohledně prohledávání stavového prostoru. <i>Prohledávání stavového prostoru</i> je ale i vlastní resource set. Může dát smysl se zamyslet, jak velký průnik mezi tématy chceme.
+      </h6>
+  </div>
+</div>
+```

@@ -9,11 +9,6 @@
       href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator.min.css"
       rel="stylesheet"
     />
-    <link href="/dist/css/tabulator_modern.min.css" rel="stylesheet">
-    <script
-      type="text/javascript"
-      src="https://unpkg.com/tabulator-tables@6.3.1/dist/js/tabulator.min.js"
-    ></script>
     <style>
       #treemap-container {
         width: 90vw;
@@ -35,7 +30,7 @@
       }
       #chartContainer {
         width: 95%;
-        max-width: 1200px; /* Adjust as needed */
+        max-width: 1200px;
       }
 
       #searchContainer {
@@ -97,10 +92,6 @@
         background-color: #f0f0f0; /* Subtle hover */
       }
 
-      #results-table {
-        width: 80vw;
-        margin-top: 1rem;
-      }
     </style>
   </head>
   <body>
@@ -112,7 +103,7 @@
         font-size: 2.5rem;
       "
     >
-      Shlukování rozhodovaček - results
+      Treemap Plot
     </h1>
     <main id="treemap-container">
       <div id="searchContainer">
@@ -293,7 +284,6 @@
         results.innerHTML = "";
 
         const matchingNodes = findNodeByName(treemapData, searchTerm);
-        console.log(treemapData);
 
         if (matchingNodes.length > 0) {
           matchingNodes.forEach((node) => {
@@ -310,6 +300,7 @@
       };
 
       function performZoom(node) {
+        console.log(node)
         if (!node) return;
         searchFeedback.textContent = `Navigating to "${node.name}"...`;
         try {
@@ -361,8 +352,11 @@
         }, 150); 
       });
 
-      results.addEventListener("click", (event) => {
+      results.addEventListener("mousedown", (event) => {
+        console.log("Clicked on results");
+        console.log(event.target);
         const targetLink = event.target.closest("a.search-item");
+        console.log(targetLink);
         if (targetLink && targetLink.dataset.nodeName) {
           if (blurTimeoutId) {
             clearTimeout(blurTimeoutId);
@@ -423,7 +417,6 @@
           option.series[0].data = jsonData;
           dataFull = jsonData;
           treemapData = jsonData;
-          console.log(treemapData);
           myChart.setOption(option);
         })
         .catch((error) => {
@@ -443,65 +436,6 @@
         myChart.resize();
       });
 
-      const tableDataUrl =
-        "https://raw.githubusercontent.com/vojtam/FlashCardTopic/refs/heads/main/docs_topics_data.json";
-
-      async function getData(url) {
-        try {
-          const response = await fetch(url);
-          if (!response.ok) {
-            throw new Error(`Response status: ${response.status}`);
-          }
-
-          const json = await response.json();
-          return json;
-        } catch (error) {
-          console.error(error.message);
-        }
-      }
-      const tableData = getData(tableDataUrl).then((result) => {
-        return result;
-      });
-      console.log(tableData);
-
-      let table;
-      getData(tableDataUrl).then((actualTableData) => {
-        if (actualTableData) {
-          console.log("Initializing Tabulator with data:", actualTableData);
-
-          table = new Tabulator("#results-table", {
-            data: actualTableData,
-            layout:"fitColumns",
-            responsiveLayout: "hide",
-            addRowPos: "top",
-            history: true,
-            pagination: "local",
-            paginationSize: 10,
-            paginationCounter: "rows",
-            movableColumns: true,
-            initialSort: [
-              { column: "name", dir: "asc" }, 
-            ],
-            columnDefaults: {
-              tooltip: true,
-            },
-            groupBy: ["rs_name", "Name"],
-            columns: [
-
-              { title: "Question", field: "question"}, 
-              { title: "Correct", field: "correct"}, 
-              { title: "Distractor", field: "distractor"}, 
-              { title: "Resource Set", field: "rs_name"},
-              { title: "Topic Name", field: "Name"},
-            ],
-            placeholder: "Loading data or no data available...",
-          });
-        } else {
-          console.error("Tabulator initialization skipped: No data received.");
-          document.getElementById("results-table").textContent =
-            "Failed to load table data.";
-        }
-      });
     </script>
   </body>
 </html>

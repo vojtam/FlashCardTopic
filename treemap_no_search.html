@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rozhodovačka TreeMap</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <link
+      href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      #treemap-container {
+        width: 90vw;
+        height: 90vh;
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        border: 1px solid #ccc;
+        background-color: #eee;
+      }
+      #treemap {
+        width: 100%;
+        height: 90%;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      #chartContainer {
+        width: 95%;
+        max-width: 1200px; /* Adjust as needed */
+      }
+
+
+    </style>
+  </head>
+  <body>
+    <h1
+      style="
+        width: 100%;
+        text-align: center;
+        font-family: monospace;
+        font-size: 2.5rem;
+      "
+    >
+      Treemap Plot
+    </h1>
+    <main id="treemap-container">
+      <section id="treemap"></section>
+    </main>
+
+    <section>
+      <div id="results-table"></div>
+      
+    </section>
+
+    <script type="text/javascript">
+      var myChart = echarts.init(document.getElementById("treemap"));
+      var loadingEl = document.getElementById("loading");
+
+
+      var treemapData = [];
+      let dataFull = [];
+      const bluesDarkerPalette = [
+        "#6baed6",
+        "#4292c6",
+        "#2171b5",
+        "#08519c",
+        "#08306b",
+      ];
+      var option = {
+        title: {
+          text: "",
+          left: "leafDepth",
+        },
+        aria: {
+          show: true,
+          enabled: true,
+          decal: {
+            show: false,
+          },
+        },
+        toolbox: {
+          show: true,
+          feature: {
+            mark: { show: true },
+            dataView: { show: true, readOnly: false },
+
+            saveAsImage: { show: true },
+          },
+        },
+
+        tooltip: {
+          formatter: function (info) {
+            if (info.data.id === "__back__") return "";
+
+            let valueDisplay = "N/A";
+            if (
+              info.treeAncestors.length === 4 &&
+              info.data.hasOwnProperty("originalValue") &&
+              typeof info.data.originalValue === "number"
+            ) {
+              valueDisplay =
+                `Success rate otázky: ${echarts.format.addCommas(
+                  info.data.originalValue.toFixed(1)
+                )}` + "%";
+            } else if (info.treeAncestors.length == 3) {
+              valueDisplay = `Počet otázek v tématu: ${echarts.format.addCommas(
+                info.value
+              )}`;
+            } else {
+              valueDisplay = `Počet témat v sadě: ${echarts.format.addCommas(
+                info.value
+              )}`;
+            }
+
+            let nameDisplay = info.name || "";
+
+            return `${nameDisplay}<br/> ${valueDisplay}`;
+          },
+        },
+
+        series: [
+          {
+            name: "Topic Treemap",
+            type: "treemap",
+            visibleMin: 300,
+            leafDepth: 1,
+            decal: true,
+            label: {
+              show: true,
+              formatter: "{b}",
+              color: "#fff",
+              overflow: "truncate",
+              // --------------------------------
+              ellipsis: "...",
+            },
+            itemStyle: {
+              borderColor: "#fff",
+            },
+            levels: [
+              {
+                color: [
+                  "#dd6b66",
+                  "#759aa0",
+                  "#e69d87",
+                  "#8dc1a9",
+                  "#ea7e53",
+                  "#eedd78",
+                  "#73a373",
+                  "#73b9bc",
+                  "#7289ab",
+                  "#91ca8c",
+                  "#f49f42",
+                ],
+
+                itemStyle: {
+                  borderWidth: 1,
+                  borderColor: "#333",
+                  gapWidth: 1,
+                },
+              },
+              {
+                color: [
+                  "#dd6b66",
+                  "#759aa0",
+                  "#e69d87",
+                  "#8dc1a9",
+                  "#ea7e53",
+                  "#eedd78",
+                  "#73a373",
+                  "#73b9bc",
+                  "#7289ab",
+                  "#91ca8c",
+                  "#f49f42",
+                ],
+                itemStyle: {
+                  borderWidth: 1,
+                  borderColor: "#333",
+                  gapWidth: 3,
+                },
+              },
+              {
+                color: bluesDarkerPalette,
+                colorMappingBy: "originalValue",
+                itemStyle: {
+                  gapWidth: 1,
+                },
+              },
+            ],
+
+            data: [],
+          },
+        ],
+      };
+
+
+      myChart.setOption(option);
+
+      window.addEventListener("resize", function () {
+        myChart.resize();
+      });
+
+    </script>
+  </body>
+</html>
